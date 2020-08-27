@@ -16,7 +16,7 @@ export default class Cache {
         this.cache.set(key, value);
     }
 
-    flush() {
-        this.cache.flushAll();
-    }
+    // flush() {
+    //     this.cache.flushAll();
+    // }
 }

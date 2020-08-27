@@ -1,8 +1,6 @@
-// import * as path from 'path';
-// import * as express from 'express';
 import * as bodyParser from 'body-parser';
 import * as cors from 'cors';
-import { Server, Controller } from '@overnightjs/core';
+import { Server } from '@overnightjs/core';
 import { Logger } from '@overnightjs/logger';
 import AuthController from './controllers/AuthController';
 import PlaylistController from './controllers/PlaylistController';

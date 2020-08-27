@@ -3,21 +3,23 @@ import { Controller, Get } from '@overnightjs/core';
 import { Request, Response } from 'express';
 import Cache from '../Cache';
 import Song from './../Song';
-const fetch = require('node-fetch');
+import fetch from 'node-fetch';
 
 @Controller('api/songs')
 class SongsController {
 
-    myCache: Cache;
+    cache: Cache;
 
     constructor(cache: Cache) {
-        this.myCache = cache;
+        this.cache = cache;
     }
     
     @Get(':name')
     private async getSongsWithNameIn(req: Request, res: Response) {
         const name = req.params.name;
-        const accessToken = this.myCache.get('accessToken');
+        const accessToken = this.cache.get('accessToken');
+        
+        console.log('access token?' + accessToken);
         if (!accessToken) {
             return undefined;
         }
@@ -35,7 +37,16 @@ class SongsController {
         });
         const responseJson = await response.json();
 
-        const tracks = responseJson.tracks.items.map((t: Song) => { return {id: t.id, name: t.name}});
+        const tracks = responseJson.tracks.items.map((t: Song) => { 
+            const artists = t.artists.map(a => a.name);
+            return {
+                id: t.id, 
+                name: t.name,
+                artists,
+                uri: t.uri,
+            }
+        });
+
         return res.status(OK).json({
             tracks
         });

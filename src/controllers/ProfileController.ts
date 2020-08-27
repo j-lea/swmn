@@ -16,6 +16,7 @@ class ProfileController {
     @Get('')
     private async getProfile(req: Request, res: Response) {
         const accessToken = this.cache.get('accessToken');
+        console.log('access token', + accessToken);
         if (!accessToken) {
             return undefined;
         }
