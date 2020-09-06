@@ -3,16 +3,20 @@ import {} from 'jasmine';
 import { SuperTest, Test } from 'supertest';
 import TestServer from '../TestServer';
 import SongsController from './SongsController';
-import Cache from '../Cache';
+import ICache from '../ICache';
 
 jest.mock('node-fetch', () => require('fetch-mock-jest').sandbox());
 const fetchMock = require('node-fetch');
 
-describe('SongsController', () => {
+const accessToken = '33333';
+const mockCache: ICache = {
+    get: () => accessToken,
+    set: () => {},
+}
 
-    const cache = new Cache();
+describe('SongsController', () => {
     
-    const songsController = new SongsController(cache);
+    const songsController = new SongsController(mockCache);
     let agent: SuperTest<Test>;
 
     beforeAll(done => {
@@ -22,9 +26,6 @@ describe('SongsController', () => {
         done();
     });
 
-    beforeEach(() => {
-    });
-
     afterEach(() => {
         fetchMock.restore();
     })
@@ -32,7 +33,6 @@ describe('SongsController', () => {
     describe('Get songs', () => {
 
         const name = 'Boop';
-        const accessToken = '12';
         const songsResponse = {
             tracks: {
                 items: [
@@ -61,17 +61,13 @@ describe('SongsController', () => {
         it(`makes a GET request to spotify and returns the songs with name and artist`, async () => {
             fetchMock.get({
                 url: `https://api.spotify.com/v1/search?q=${name}&type=track`,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'Authorization': `Bearer ${accessToken}`
-                }}, songsResponse);
+            }, songsResponse);
 
             const response = await agent.get(`/api/songs/${name}`)
                 .set('Content-Type', 'application/json')
                 .set('Accept', 'application/json');
 
-            expect(fetchMock).toHaveBeenCalledTimes
+            expect(fetchMock).toHaveBeenCalledTimes(1);
             expect(fetchMock).toHaveBeenCalledWith(`https://api.spotify.com/v1/search?q=${name}&type=track`, {
                 headers: {
                     'Accept': 'application/json',

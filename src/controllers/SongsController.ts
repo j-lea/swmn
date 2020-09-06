@@ -1,23 +1,23 @@
 import { OK } from 'http-status-codes';
 import { Controller, Get } from '@overnightjs/core';
 import { Request, Response } from 'express';
-import Cache from '../Cache';
 import Song from './../Song';
 import fetch from 'node-fetch';
+import ICache from '../ICache';
 
 @Controller('api/songs')
 class SongsController {
 
-    cache: Cache;
+    cache: ICache;
 
-    constructor(cache: Cache) {
+    constructor(cache: ICache) {
         this.cache = cache;
     }
     
     @Get(':name')
     private async getSongsWithNameIn(req: Request, res: Response) {        
         const name = req.params.name;
-        const accessToken = '12';// this.cache.get('accessToken');
+        const accessToken = this.cache.get('accessToken');
         
         if (!accessToken) {
             return undefined;

@@ -1,6 +1,7 @@
 import * as NodeCache from 'node-cache';
+import ICache from './ICache';
 
-export default class Cache {
+export default class Cache implements ICache {
 
     private readonly cache: NodeCache;
     
