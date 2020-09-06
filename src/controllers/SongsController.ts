@@ -15,11 +15,10 @@ class SongsController {
     }
     
     @Get(':name')
-    private async getSongsWithNameIn(req: Request, res: Response) {
+    private async getSongsWithNameIn(req: Request, res: Response) {        
         const name = req.params.name;
-        const accessToken = this.cache.get('accessToken');
+        const accessToken = '12';// this.cache.get('accessToken');
         
-        console.log('access token?' + accessToken);
         if (!accessToken) {
             return undefined;
         }
