@@ -1,23 +1,23 @@
 import * as supertest from 'supertest';
 import {} from 'jasmine';
-import * as nock from 'nock';
 import { SuperTest, Test } from 'supertest';
 import TestServer from '../TestServer';
 import PlaylistController from './PlaylistController';
-import Cache from './../Cache';
-import { Logger } from '@overnightjs/logger';
-import { OK, BAD_REQUEST } from 'http-status-codes';
-const fetch = require('node-fetch');
+import ICache from '../ICache';
+
+jest.mock('node-fetch', () => require('fetch-mock-jest').sandbox());
+const fetchMock = require('node-fetch');
+
+const accessToken = '33333';
+const mockCache: ICache = {
+    get: () => accessToken,
+    set: () => {},
+}
 
 describe('PlaylistController', () => {
-
-    const cache = new Cache();
-
-    const baseUrl = 'https://api.spotify.com';
     
-    const playlistController = new PlaylistController(cache);
+    const playlistController = new PlaylistController(mockCache);
     let agent: SuperTest<Test>;
-
 
     beforeAll(done => {
         const server = new TestServer();
@@ -26,56 +26,72 @@ describe('PlaylistController', () => {
         done();
     });
 
-    // describe('simple test', () => {
-    //     it('should test that true === true', () => {
-    //         expect(true).toBe(true)
-    //     });
-    // });
+    afterEach(() => {
+        fetchMock.restore();
+    })
 
-    // describe('Create playlist', () => {
+    describe('Create playlist', () => {
 
-    //     const userId = '1234'; 
-    //     const name = 'Oswald';
+        const songs = [
+            {
+                name: 'Beep boop',
+                uri: 'aaa',
+            },
+            {
+                name: 'Boop the magic dragon',
+                uri: 'abc',
+            },
+            {
+                name: 'Boops on my guitar',
+                uri: 'xxx',
+            },
+        ];
     
-    //     it(`should post to spotify and return a status code 200 if spotify returns OK`, async done => {
-    //         // fetchMock
-    //         //     .post(`${baseUrl}/v1/users/1234/playlists`, (url: string, options: any) => {
-    //         //         return 200;
-    //         //     });
+        it(`makes a POST request to spotify with the playlist name then adds the songs to the playlist created`, async () => {
+            const userId = '66666';
+            const playlistId = '1234';
+            const name = 'Jenny';
 
-    //         // nock(baseUrl)
-    //         //     .post('/v1/users/1234/playlists')
-    //         //     .matchHeader('Content-Type', 'application/json')
-    //         //     .matchHeader('Accept', 'application/json')
-    //         //     .reply(OK, {});
+            fetchMock.post({
+                url: `https://api.spotify.com/v1/users/${userId}/playlists`,
+            }, { id: playlistId });
 
-    //         const response = await agent.post(`/api/playlists/Oswald`)
-    //             .send({userId: '1234'})
-    //             .set('Accept', 'application/json')
-    //             .set('Content-Type', 'application/json');
+            fetchMock.post({
+                url: `https://api.spotify.com/v1/playlists/${playlistId}/tracks?uris=aaa,abc,xxx`,
+            }, {});
 
-    //         expect(response.status).toBe(200);
-    //     });
+            const response = await agent.post(`/api/playlists/${name}`)
+                .set('Content-Type', 'application/json')
+                .set('Accept', 'application/json')
+                .send({
+                    userId: userId,
+                    songs
+                });
 
-    //     it(`should post to spotify and return a status code 400 if spotify returns 400`, done => {
-    //         nock(baseUrl)
-    //             .post('/v1/users/1234/playlists')
-    //             .reply(BAD_REQUEST, {});
+            expect(fetchMock).toHaveBeenCalledTimes(2);
+            expect(fetchMock).toHaveBeenCalledWith(`https://api.spotify.com/v1/users/${userId}/playlists`, {
+                headers: {
+                    'Accept': 'application/json',
+                    'Authorization': `Bearer ${accessToken}`,
+                    'Content-Type': 'application/json' },
+                method: 'POST',
+                body: JSON.stringify({
+                    name: 'Songs With My Name In',
+                    description: 'Created by SWMN',
+                    public: true
+                }),
+            });
 
-    //         agent.post(`/api/playlists`)
-    //             .send({ userId, name })
-    //             .end((err, res) => {
-    //                 if (err) {
-    //                     Logger.Err(err);
-    //                 }
+            expect(fetchMock).toHaveBeenCalledWith(`https://api.spotify.com/v1/playlists/${playlistId}/tracks?uris=aaa,abc,xxx`, {
+                headers: {
+                    'Accept': 'application/json',
+                    'Authorization': `Bearer ${accessToken}`,
+                    'Content-Type': 'application/json' },
+                method: 'POST',
+            });
 
-    //                 expect(res.status).toBe(BAD_REQUEST);
-
-    //                 // TODO: expect call to be made to spotify
-
-    //                 done();
-    //             });
-    //     });
-    // });
+            expect(response.status).toBe(200);
+        });
+    });
 
 });

@@ -1,16 +1,16 @@
 import { OK } from 'http-status-codes';
 import { Controller, Post } from '@overnightjs/core';
 import { Request, Response } from 'express';
-import Cache from '../Cache';
 import Song from './../Song';
+import ICache from '../ICache';
 const fetch = require('node-fetch');
 
 @Controller('api/playlists')
 class PlaylistController {
 
-    cache: Cache;
+    cache: ICache;
 
-    constructor(cache: Cache) {
+    constructor(cache: ICache) {
         this.cache = cache;
     }
 
@@ -35,7 +35,7 @@ class PlaylistController {
         };
 
         const data: any = {
-            name: 'Songs With My Name In 2',
+            name: 'Songs With My Name In',
             description: 'Created by SWMN',
             public: true
         };
@@ -65,7 +65,6 @@ class PlaylistController {
 
         const urlWithParams = url + '?uris=' + uris;
         const response = await fetch(urlWithParams, {
-            // body: JSON.stringify(data),
             headers,
             method: 'POST',
         });
